@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { Games, Events, Ack } from 'flashmatch-multiplayer-shared';
-// import { sendPlayerJoinedInfo } from './utils';
+import { sendPlayerJoinedInfo } from './utils';
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,7 +14,7 @@ const io = new Server(httpServer, {
 
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
-// const playerJoined: Events['playerJoined']['name'] = 'playerJoined';
+const playerJoined: Events['playerJoined']['name'] = 'playerJoined';
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -25,7 +25,7 @@ io.on('connection', (socket) => {
     if (count < Games[payload.gameName].maxPlayers) {
       socket.join(roomName);
       callback({ success: true });
-      // sendPlayerJoinedInfo(socket, roomName, playerJoined, { number: count, playerName: payload.playerName });
+      sendPlayerJoinedInfo(socket, roomName, playerJoined, { number: count + 1, playerName: payload.playerName });
     } else {
       callback({ success: false, error: 'This room is full. Try another.' });
     }
