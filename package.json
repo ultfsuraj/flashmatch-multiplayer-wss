@@ -1,0 +1,41 @@
+{
+  "name": "flashmatch-multiplayer-wss",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint 'src/**/*.{ts,js}'",
+    "format": "prettier --write 'src/**/*.{ts,js,json,md}'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ultfsuraj/flashmatch-multiplayer-wss.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ultfsuraj/flashmatch-multiplayer-wss/issues"
+  },
+  "homepage": "https://github.com/ultfsuraj/flashmatch-multiplayer-wss#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0",
+    "flashmatch-multiplayer-shared": "github:ultfsuraj/flashmatch-multiplayer-shared#main",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2"
+  }
+}
