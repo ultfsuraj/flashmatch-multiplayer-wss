@@ -12,6 +12,9 @@ const io = new Server(httpServer, {
   },
 });
 
+const ROOMS: Record<string, { lastUpdated: number; players: Record<string, number>; connected: number }> = {};
+// interval check if no one is in the room for > 10 minutes...
+
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
 const playerJoined: Events['playerJoined']['name'] = 'playerJoined';
@@ -21,18 +24,52 @@ io.on('connection', (socket) => {
 
   socket.on(joinRoom, (payload: Events['joinRoom']['payload'], callback: (response: Ack) => void) => {
     const roomName = `${payload.gameName}-${payload.roomid}`;
-    const count = io.of('/').adapter.rooms.get(roomName)?.size || 0;
-    if (count < Games[payload.gameName].maxPlayers) {
-      socket.join(roomName);
-      callback({ success: true });
-      sendPlayerJoinedInfo(socket, roomName, playerJoined, { number: count + 1, playerName: payload.playerName });
+    ROOMS[roomName].lastUpdated = performance.now();
+    if (ROOMS[roomName]) {
+      const players = ROOMS[roomName].players;
+      if (players[payload.playerName]) {
+        ROOMS[roomName].connected += 1;
+        socket.join(roomName);
+        socket.data.room = roomName;
+        callback({ success: true, order: players[payload.playerName] });
+        sendPlayerJoinedInfo(socket, roomName, playerJoined, {
+          number: players[payload.playerName],
+          playerName: payload.playerName,
+        });
+      } else {
+        if (Object.values(ROOMS[roomName].players).length == Games[payload.gameName].maxPlayers) {
+          callback({ success: false, error: 'This room is full. Try another.' });
+        } else {
+          const order = Object.values(players).length + 1;
+          ROOMS[roomName].players[payload.playerName] = order;
+          ROOMS[roomName].connected += 1;
+          socket.join(roomName);
+          socket.data.room = roomName;
+          callback({ success: true, order });
+          sendPlayerJoinedInfo(socket, roomName, playerJoined, {
+            number: order,
+            playerName: payload.playerName,
+          });
+        }
+      }
     } else {
-      callback({ success: false, error: 'This room is full. Try another.' });
+      ROOMS[roomName] = { lastUpdated: 0, players: {}, connected: 1 };
+      ROOMS[roomName].players[payload.playerName] = 1;
+
+      socket.join(roomName);
+      socket.data.room = roomName;
+      callback({ success: true, order: 1 });
+      sendPlayerJoinedInfo(socket, roomName, playerJoined, {
+        number: 1,
+        playerName: payload.playerName,
+      });
     }
   });
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
+    const roomName = socket.data.room;
+    ROOMS[roomName].connected -= 1;
   });
 });
 
