@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { Games, Events, Ack } from 'flashmatch-multiplayer-shared';
-import { sendPlayerJoinedInfo } from './utils';
+import { sendPlayerJoinedInfo, sendMoveInfo } from './utils';
 
 const app = express();
 const httpServer = createServer(app);
@@ -33,6 +33,7 @@ setInterval(() => {
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
 const playerJoined: Events['playerJoined']['name'] = 'playerJoined';
+const makeMove: Events['makeMove']['name'] = 'makeMove';
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -80,6 +81,10 @@ io.on('connection', (socket) => {
         playerName: payload.playerName,
       });
     }
+  });
+
+  socket.on(makeMove, (payload: Events['makeMove']['payload'], callback: (resoonse: Ack) => void) => {
+    sendMoveInfo(socket, socket.data.room, makeMove, payload);
   });
 
   socket.on('disconnect', () => {

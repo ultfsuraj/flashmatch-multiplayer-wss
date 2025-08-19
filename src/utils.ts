@@ -9,3 +9,12 @@ export const sendPlayerJoinedInfo = (
 ) => {
   socket.to(roomName).emit(evt, payload);
 };
+
+export const sendMoveInfo = (
+  socket: Socket,
+  roomName: string,
+  evt: Events['makeMove']['name'],
+  payload: Events['makeMove']['payload']
+) => {
+  socket.to(roomName).emit(evt, payload);
+};
