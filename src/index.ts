@@ -14,6 +14,21 @@ const io = new Server(httpServer, {
 
 const ROOMS: Record<string, { lastUpdated: number; players: Record<string, number>; connected: number }> = {};
 // interval check if no one is in the room for > 10 minutes...
+setInterval(() => {
+  const now = performance.now();
+  let toDelete: string[] = [];
+  Object.keys(ROOMS).forEach((roomId) => {
+    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 30000) {
+      toDelete.push(roomId);
+    }
+  });
+  console.log('before delete ', ROOMS);
+  console.log('to delete', toDelete);
+  toDelete.forEach((roomId) => {
+    delete ROOMS[roomId];
+  });
+  console.log('after delete ', ROOMS);
+}, 30000);
 
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
@@ -24,9 +39,10 @@ io.on('connection', (socket) => {
 
   socket.on(joinRoom, (payload: Events['joinRoom']['payload'], callback: (response: Ack) => void) => {
     const roomName = `${payload.gameName}-${payload.roomid}`;
-    ROOMS[roomName].lastUpdated = performance.now();
+
     if (ROOMS[roomName]) {
       const players = ROOMS[roomName].players;
+      ROOMS[roomName].lastUpdated = performance.now();
       if (players[payload.playerName]) {
         ROOMS[roomName].connected += 1;
         socket.join(roomName);
@@ -55,7 +71,7 @@ io.on('connection', (socket) => {
     } else {
       ROOMS[roomName] = { lastUpdated: 0, players: {}, connected: 1 };
       ROOMS[roomName].players[payload.playerName] = 1;
-
+      ROOMS[roomName].lastUpdated = performance.now();
       socket.join(roomName);
       socket.data.room = roomName;
       callback({ success: true, order: 1 });
@@ -68,8 +84,8 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
-    const roomName = socket.data.room;
-    ROOMS[roomName].connected -= 1;
+    const roomName: string = socket.data.room || '';
+    if (ROOMS[roomName]) ROOMS[roomName].connected -= 1;
   });
 });
 
