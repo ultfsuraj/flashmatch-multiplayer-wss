@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { Games, Events, Ack } from 'flashmatch-multiplayer-shared';
+import { Games, Events, Ack, TimeOut } from 'flashmatch-multiplayer-shared';
 import { sendPlayerJoinedInfo, sendMoveInfo, sendGameState } from './utils';
 
 const app = express();
@@ -23,7 +23,7 @@ setInterval(() => {
   const now = performance.now();
   let toDelete: string[] = [];
   Object.keys(ROOMS).forEach((roomId) => {
-    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 300000) {
+    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > TimeOut) {
       toDelete.push(roomId);
     }
   });
@@ -33,7 +33,7 @@ setInterval(() => {
     delete ROOMS[roomId];
   });
   console.log('after delete ', ROOMS);
-}, 300000);
+}, TimeOut);
 
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
