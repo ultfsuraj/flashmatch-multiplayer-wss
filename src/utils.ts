@@ -18,3 +18,12 @@ export const sendMoveInfo = (
 ) => {
   socket.to(roomName).emit(evt, payload);
 };
+
+export const sendGameState = (
+  socket: Socket,
+  roomName: string,
+  evt: Events['syncGameState']['name'],
+  payload: Events['syncGameState']['payload']
+) => {
+  socket.to(roomName).emit(evt, payload);
+};

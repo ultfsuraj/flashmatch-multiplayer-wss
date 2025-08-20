@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { Games, Events, Ack } from 'flashmatch-multiplayer-shared';
-import { sendPlayerJoinedInfo, sendMoveInfo } from './utils';
+import { sendPlayerJoinedInfo, sendMoveInfo, sendGameState } from './utils';
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,7 +18,7 @@ const ROOMS: Record<
   string,
   { lastUpdated: number; players: Record<string, { order: number; connected: boolean }>; connected: number }
 > = {};
-// interval check if no one is in the room for > 10 minutes...
+// interval check if no one is in the room for > 600000 ms
 setInterval(() => {
   const now = performance.now();
   let toDelete: string[] = [];
@@ -40,6 +40,7 @@ const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
 const playerJoined: Events['playerJoined']['name'] = 'playerJoined';
 const makeMove: Events['makeMove']['name'] = 'makeMove';
 const exitRoom: Events['exitRoom']['name'] = 'exitRoom';
+const syncGameState: Events['syncGameState']['name'] = 'syncGameState';
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -102,6 +103,10 @@ io.on('connection', (socket) => {
 
   socket.on(makeMove, (payload: Events['makeMove']['payload'], callback: (resoonse: Ack) => void) => {
     sendMoveInfo(socket, socket.data.room, makeMove, payload);
+  });
+
+  socket.on(syncGameState, (payload: Events['syncGameState']['payload'], callback: (response: Ack) => void) => {
+    sendGameState(socket, socket.data.room, syncGameState, payload);
   });
 
   socket.on(exitRoom, (payload: Events['exitRoom']['payload']) => {
