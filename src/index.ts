@@ -23,7 +23,7 @@ setInterval(() => {
   const now = performance.now();
   let toDelete: string[] = [];
   Object.keys(ROOMS).forEach((roomId) => {
-    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 600000) {
+    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 10000) {
       toDelete.push(roomId);
     }
   });
@@ -33,7 +33,7 @@ setInterval(() => {
     delete ROOMS[roomId];
   });
   console.log('after delete ', ROOMS);
-}, 600000);
+}, 10000);
 
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
