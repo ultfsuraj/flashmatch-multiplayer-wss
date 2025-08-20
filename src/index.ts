@@ -18,12 +18,12 @@ const ROOMS: Record<
   string,
   { lastUpdated: number; players: Record<string, { order: number; connected: boolean }>; connected: number }
 > = {};
-// interval check if no one is in the room for > 600000 ms
+// interval check if no one is in the room for > 5min
 setInterval(() => {
   const now = performance.now();
   let toDelete: string[] = [];
   Object.keys(ROOMS).forEach((roomId) => {
-    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 10000) {
+    if (ROOMS[roomId].connected == 0 && Math.round(now - ROOMS[roomId].lastUpdated) > 300000) {
       toDelete.push(roomId);
     }
   });
@@ -33,7 +33,7 @@ setInterval(() => {
     delete ROOMS[roomId];
   });
   console.log('after delete ', ROOMS);
-}, 10000);
+}, 300000);
 
 // events
 const joinRoom: Events['joinRoom']['name'] = 'joinRoom';
