@@ -8,8 +8,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    // origin: 'https://flashmatch-multiplayer.vercel.app',
-    origin: 'http://localhost:3000',
+    origin: 'https://flashmatch-multiplayer.vercel.app',
+    // origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true,
   },
