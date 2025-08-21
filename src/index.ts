@@ -8,7 +8,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'https://flashmatch-multiplayer.vercel.app',
+    // origin: 'https://flashmatch-multiplayer.vercel.app',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -57,13 +58,16 @@ io.on('connection', (socket) => {
           callback({ success: false, error: `Player ${payload.playerName} has already joined, use another name` });
           return;
         }
+        Object.entries(ROOMS[roomName].players).forEach(([name, { order, connected }]) => {
+          if (name != payload.playerName) socket.emit(playerJoined, { order, playerName: name });
+        });
         ROOMS[roomName].connected += 1;
         ROOMS[roomName].players[payload.playerName].connected = true;
         socket.join(roomName);
+        callback({ success: true, order: players[payload.playerName].order });
         socket.data.room = roomName;
         socket.data.playerName = payload.playerName;
         ROOMS[roomName].lastUpdated = performance.now();
-        callback({ success: true, order: players[payload.playerName].order });
         sendPlayerJoinedInfo(socket, roomName, playerJoined, {
           order: players[payload.playerName].order,
           playerName: payload.playerName,
@@ -72,14 +76,17 @@ io.on('connection', (socket) => {
         if (Object.values(ROOMS[roomName].players).length == Games[payload.gameName].maxPlayers) {
           callback({ success: false, error: 'This room is full. Try another.' });
         } else {
+          Object.entries(ROOMS[roomName].players).forEach(([name, { order, connected }]) => {
+            socket.emit(playerJoined, { order, playerName: name });
+          });
           const order = Object.values(players).length + 1;
           ROOMS[roomName].connected += 1;
           ROOMS[roomName].players[payload.playerName] = { order, connected: true };
           socket.join(roomName);
+          callback({ success: true, order });
           socket.data.room = roomName;
           socket.data.playerName = payload.playerName;
           ROOMS[roomName].lastUpdated = performance.now();
-          callback({ success: true, order });
           sendPlayerJoinedInfo(socket, roomName, playerJoined, {
             order: order,
             playerName: payload.playerName,
@@ -91,9 +98,9 @@ io.on('connection', (socket) => {
       ROOMS[roomName].players[payload.playerName] = { order: 1, connected: true };
       ROOMS[roomName].lastUpdated = performance.now();
       socket.join(roomName);
+      callback({ success: true, order: 1 });
       socket.data.room = roomName;
       socket.data.playerName = payload.playerName;
-      callback({ success: true, order: 1 });
       sendPlayerJoinedInfo(socket, roomName, playerJoined, {
         order: 1,
         playerName: payload.playerName,
