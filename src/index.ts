@@ -8,8 +8,8 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: 'https://flashmatch-multiplayer.vercel.app',
-    // origin: 'http://localhost:3000',
+    // origin: 'https://flashmatch-multiplayer.vercel.app',
+    origin: 'http://localhost:3000',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -28,12 +28,9 @@ setInterval(() => {
       toDelete.push(roomId);
     }
   });
-  console.log('before delete ', ROOMS);
-  console.log('to delete', toDelete);
   toDelete.forEach((roomId) => {
     delete ROOMS[roomId];
   });
-  console.log('after delete ', ROOMS);
 }, TimeOut);
 
 // events
@@ -44,8 +41,6 @@ const exitRoom: Events['exitRoom']['name'] = 'exitRoom';
 const syncGameState: Events['syncGameState']['name'] = 'syncGameState';
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-
   socket.on(joinRoom, (payload: Events['joinRoom']['payload'], callback: (response: Ack) => void) => {
     const roomName = `${payload.gameName}-${payload.roomid}`;
 
@@ -53,7 +48,6 @@ io.on('connection', (socket) => {
       const players = ROOMS[roomName].players;
 
       if (players[payload.playerName]) {
-        console.log('trying to connect ', players[payload.playerName]);
         if (players[payload.playerName].connected == true) {
           callback({ success: false, error: `Player ${payload.playerName} has already joined, use another name` });
           return;
@@ -120,7 +114,6 @@ io.on('connection', (socket) => {
     const roomName = `${payload.gameName}-${payload.roomid}`;
     const playerName = ROOMS[roomName]?.players[payload.playerName];
     const playerConnected = ROOMS[roomName]?.players[payload.playerName]?.connected;
-    console.log('exiting ', { roomName, playerName, playerConnected });
     if (ROOMS[roomName] && playerName && playerConnected && ROOMS[roomName].connected > 0) {
       ROOMS[roomName].connected -= 1;
       ROOMS[roomName].players[payload.playerName].connected = false;
@@ -128,8 +121,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-    console.log(socket.data.room);
     const roomName: string = socket.data.room || '';
     const playerName: string = socket.data.playerName || '';
     const playerConnected = ROOMS[roomName]?.players[playerName]?.connected || false;
